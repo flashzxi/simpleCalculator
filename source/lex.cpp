@@ -100,6 +100,7 @@ token lex::parseNext(){
 
     // 全不匹配
     // 输出错误
+    error_p("unknown character here");
     return err;
 }
 
@@ -149,10 +150,10 @@ bool lex::hasNext(){
     return false;
 }
 
-std::string lex::error_p(std::string msg){
+std::string lex::error_p(const std::string& msg){
     std::string errMsg;
-    errMsg = errMsg+"error:" + '\n' + expression + '\n';
-    errMsg = errMsg + std::string(curIndex-1,' ')+"^\n" + msg + '\n';
+    errMsg = errMsg+"  error:" + "\n    " + expression + "\n    ";
+    errMsg = errMsg + std::string(curIndex-1,' ')+"^\n  " + msg + "\n";
     std::cout<<errMsg;
     exit(-1);
     return errMsg;

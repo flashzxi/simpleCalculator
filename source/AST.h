@@ -140,6 +140,10 @@ public:
     double getValue() override{
         return valueMap[value];
     }
+
+    bool exist(){
+        return !valueMap.count(value) == 0;
+    }
 };
 
 class UnaryAST: public CalculateAST{

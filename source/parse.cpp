@@ -41,9 +41,11 @@ CalculateAST* parse::parseCalculateTerminal(){
     return new CalcuErrorAST;
 }
 
-void parse::genCalculateAST(CalculateAST* left, OP op, std::stack<OP>& ops, std::stack<CalculateAST*>& leftExpressions){
+void parse::genCalculateAST(CalculateAST* left, OP op, std::stack<OP>& ops,
+                            std::stack<CalculateAST*>& leftExpressions){
     while( ! ops.empty() 
-        && priority[op] <= priority[ops.top()] ){
+        && ( (op==POW && priority[op] < priority[ops.top()]) ||
+            (op!=POW && priority[op] <= priority[ops.top()]) )){
         CalculateAST *expression_r = leftExpressions.top();
         leftExpressions.pop();
         CalculateAST *expression_l = leftExpressions.top();
@@ -58,7 +60,8 @@ void parse::genCalculateAST(CalculateAST* left, OP op, std::stack<OP>& ops, std:
 }
 
 // 辅助构造CalculateAST
-CalculateAST* parse::parseCalculateRightAST(std::stack<OP>& ops, std::stack<CalculateAST*>& leftExpressions){
+CalculateAST* parse::parseCalculateRightAST(std::stack<OP>& ops,
+                                            std::stack<CalculateAST*>& leftExpressions){
     if(curToken == eof || curToken == rightBra){
         CalculateAST *ret = leftExpressions.top();
         leftExpressions.pop();
@@ -125,7 +128,11 @@ IntAST* parse::parseIntAST(){
 
 VarAST* parse::parseVarAST(){
     nextToken();
-    return new VarAST(myLex->getCurVar());
+    VarAST* ret = new VarAST(myLex->getCurVar());
+    if(!ret->exist()){
+        myLex->error_p("var doesn't exist");
+    }
+    return ret;
 }
 
 DoubleAST* parse::parseDoubleAST(){
@@ -144,6 +151,8 @@ DeclareAST* parse::parseDeclareAST(){
     return new DeclareAST(varName, value);
 }
 
+bool isBinaryOperator(token);
+
 AST* parse::parseAst(){
 //    clearStacks();
     switch(curToken){
@@ -152,20 +161,41 @@ AST* parse::parseAst(){
         if(curToken == equal){
             curVar.push(myLex->getCurVar());
             nextToken();
+            if(curToken!=eof)
             return parseDeclareAST();
-        } else {
+        } else if(isBinaryOperator(curToken)) {
             std::stack<CalculateAST*> leftExpressions;
             std::stack<OP> ops;
             leftExpressions.push(new VarAST(myLex->getCurVar()));
             return parseCalculateRightAST(ops, leftExpressions);
+        }else{
+            myLex->error_p("= or binary operator expected here");
         }
         break;
     default:
-        return parseCalculateAST();
+        CalculateAST *ret = parseCalculateAST();
+        if(curToken!=eof){
+            myLex->error_p("expression should end at here");
+        }
+        return ret;
     }
 }
 
 token parse::nextToken(){
     curToken = myLex->nextToken();
     return curToken;
+}
+
+bool isBinaryOperator(token t){
+    switch(t){
+        case plus:
+        case minus:
+        case times:
+        case divide:
+        case mod:
+        case power:
+            return true;
+        default:
+            return false;
+    }
 }

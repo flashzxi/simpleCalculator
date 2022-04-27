@@ -72,7 +72,7 @@ public:
 
     void showCurrent();
 
-    std::string error_p(std::string msg=std::string());
+    std::string error_p(const std::string& msg=std::string());
 };
 
 #endif
