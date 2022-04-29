@@ -28,24 +28,24 @@ private:
 
     token nextToken();
 
-    BinaryAST* parseBinaryAST();
+    std::unique_ptr<BinaryAST> parseBinaryAST();
 
-    IntAST* parseIntAST();
+    std::unique_ptr<IntAST> parseIntAST();
 
-    VarAST* parseVarAST();
+    std::unique_ptr<VarAST> parseVarAST();
 
-    DoubleAST* parseDoubleAST();
+    std::unique_ptr<DoubleAST> parseDoubleAST();
 
-    DeclareAST* parseDeclareAST();
+    std::unique_ptr<DeclareAST> parseDeclareAST();
 
-    CalculateAST* parseCalculateAST();
+    std::unique_ptr<CalculateAST> parseCalculateAST();
 
-    CalculateAST* parseCalculateRightAST(std::stack<OP>& ops, std::stack<CalculateAST*>& leftExpressions);
+    std::unique_ptr<CalculateAST> parseCalculateRightAST(std::stack<OP>& ops, std::stack<std::unique_ptr<CalculateAST>>& leftExpressions);
 
-    CalculateAST* parseCalculateTerminal();
+    std::unique_ptr<CalculateAST> parseCalculateTerminal();
     // UnaryAST parseUnaryAST();
 
-    void genCalculateAST(CalculateAST* left, OP op, std::stack<OP>& ops, std::stack<CalculateAST*>& leftExpressions);
+    void genCalculateAST(std::unique_ptr<CalculateAST> left, OP op, std::stack<OP>& ops, std::stack<std::unique_ptr<CalculateAST>>& leftExpressions);
 
     void initPriorityMap(){
         priority[END] = INT32_MIN;
@@ -75,7 +75,7 @@ public:
         nextToken();
     };
 
-    AST* parseAst();
+    std::unique_ptr<AST> parseAst();
 
 };
 

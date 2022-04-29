@@ -4,6 +4,8 @@
 #include<map>
 #include<cmath>
 #include<string>
+#include<memory>
+#include <utility>
 
 enum OP {
     ADD,
@@ -32,6 +34,7 @@ public:
     virtual void exec() = 0;
     virtual ASTType getType() = 0;
     virtual bool hasError() = 0;
+    virtual ~AST()= default;
 };
 
 class CalculateAST:public AST {
@@ -48,14 +51,17 @@ public:
     bool hasError() override{
         return false;
     }
+
+    ~CalculateAST() override= default;
 };
 
 class DeclareAST: public AST{
     std::string varname;
-    CalculateAST* value;
+    std::unique_ptr<CalculateAST> value;
 
 public:
-    DeclareAST(std::string varname, CalculateAST* value):varname(varname){ this->value = value;}
+    DeclareAST(std::string varname,std::unique_ptr<CalculateAST> value):varname(std::move(varname)), value(std::move(value)){ }
+
     void exec() override{
         valueMap[varname] = value->getValue();
     }
@@ -67,17 +73,19 @@ public:
     bool hasError() override{
         return false;
     }
+
+    ~DeclareAST() override= default;
 };
 
 class BinaryAST: public CalculateAST{
 private:
     OP op;
-    CalculateAST* left;
-    CalculateAST* right;
+    std::unique_ptr<CalculateAST> left;
+    std::unique_ptr<CalculateAST> right;
 
 public:
-    BinaryAST(OP op, CalculateAST* left, CalculateAST* right):
-        op(op), left(left), right(right){ }
+    BinaryAST(OP op, std::unique_ptr<CalculateAST> left, std::unique_ptr<CalculateAST> right):
+        op(op), left(std::move(left)), right(std::move(right)){ }
 
     double getValue() override{
         switch (op)
@@ -100,7 +108,7 @@ public:
         }
     }
 
-    bool hasError() {
+    bool hasError() override {
         return left->hasError() || right->hasError();
     }
 };
@@ -110,7 +118,7 @@ private:
     int value;
 
 public:
-    IntAST(int value):value(value){}
+    explicit IntAST(int value):value(value){}
 
     double getValue() override{
         return value;
@@ -126,7 +134,7 @@ public:
         return value;
     };
 
-    DoubleAST(double value):value(value){}
+    explicit DoubleAST(double value):value(value){}
 };
 
 class VarAST: public CalculateAST{
@@ -135,24 +143,24 @@ private:
     std::string value;
 
 public:
-    VarAST(std::string value): value(value){};
+    explicit VarAST(std::string value): value(std::move(value)){};
 
     double getValue() override{
         return valueMap[value];
     }
 
     bool exist(){
-        return !valueMap.count(value) == 0;
+        return valueMap.count(value) != 0;
     }
 };
 
 class UnaryAST: public CalculateAST{
 private:
     char op;
-    CalculateAST* value;
+    std::unique_ptr<CalculateAST> value;
 
 public:
-    UnaryAST(char op, CalculateAST* value):op(op), value(value){ }
+    UnaryAST(char op, std::unique_ptr<CalculateAST> value):op(op), value(std::move(value)){ }
 
     double getValue() override{
         if(op=='-'){
@@ -161,14 +169,14 @@ public:
         return value->getValue();
     }
 
-    bool hasError(){
+    bool hasError() override{
         return value->hasError();
     }
 };
 
 class ErrorAST: public AST{
 public:
-    ErrorAST() {}
+    ErrorAST() = default;
     void exec() override{}
     ASTType getType() override{
         return ERROR;
@@ -181,7 +189,7 @@ public:
 
 class CalcuErrorAST: public CalculateAST{
 public:
-    CalcuErrorAST(){}
+    CalcuErrorAST()= default;
     double getValue() override{
         return 0;
     }

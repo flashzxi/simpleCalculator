@@ -12,7 +12,7 @@ int main(){
     while(buffer!="exit"){
         lex* myLex = new lex(buffer);
         parse myParser(myLex);
-        AST *ast = myParser.parseAst();
+        std::unique_ptr<AST> ast = std::move(myParser.parseAst());
         ast->exec();
         if(ast->getType() == CALCU){
             std::cout<< result << std::endl;

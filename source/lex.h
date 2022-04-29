@@ -49,9 +49,9 @@ public:
         lex(other.getExpression());
     }
 
-    lex(std::string expression);
+    explicit lex(std::string expression);
 
-    const std::string getExpression(){
+    std::string getExpression(){
         return expression;
     }
 
